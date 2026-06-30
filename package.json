@@ -1,0 +1,15 @@
+{
+  "name": "escaperoom-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mobile PWA to track played escape rooms",
+  "scripts": {
+    "postinstall": "npm --prefix server install && npm --prefix client install",
+    "icons": "npm --prefix client run gen:icons",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev": "node scripts/dev.mjs",
+    "build": "npm --prefix client run gen:icons && npm --prefix client run build && rm -rf server/public && cp -r client/dist server/public",
+    "start": "npm --prefix server start"
+  }
+}

@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+client/dist/
+server/public/
+
+# Runtime data (DB + uploaded photos)
+.data/
+server/.data/
+*.db
+*.db-shm
+*.db-wal
+
+# Env / OS
+.env
+.env.local
+**/.DS_Store
+npm-debug.log*
+
+# Local editor / agent config
+.claude/

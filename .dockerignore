@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/.data
+server/public
+.git
+.gitignore
+.claude
+*.md
+npm-debug.log*
+**/.DS_Store

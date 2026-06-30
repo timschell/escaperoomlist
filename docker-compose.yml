@@ -1,0 +1,26 @@
+# Deployment via Dokploy (Compose) or plain `docker compose up -d`.
+# The named volume keeps the SQLite DB and uploaded photos across redeploys.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - DATA_DIR=/data
+      # Set a password to protect the app on a public domain (HTTP Basic Auth).
+      # In Dokploy add these under the service's Environment settings instead.
+      - APP_USER=${APP_USER:-escape}
+      - APP_PASSWORD=${APP_PASSWORD:-}
+    volumes:
+      - escaperoom-data:/data
+    # Dokploy's built-in proxy (Traefik) routes your domain to this port; no host
+    # publish needed there. "expose" keeps it internal.
+    expose:
+      - "3000"
+    # For a plain server WITHOUT Dokploy/Traefik, comment out "expose" above and
+    # publish the port instead:
+    # ports:
+    #   - "3000:3000"
+
+volumes:
+  escaperoom-data:
