@@ -1,4 +1,6 @@
-# Deployment via Dokploy (Compose) or plain `docker compose up -d`.
+# Deployment via Dokploy (Compose).
+# For Compose services Dokploy does NOT auto-wire Traefik, so the routing is done
+# with the labels below + joining the external "dokploy-network".
 # The named volume keeps the SQLite DB and uploaded photos across redeploys.
 services:
   app:
@@ -8,19 +10,30 @@ services:
       - PORT=3000
       - DATA_DIR=/data
       # Set a password to protect the app on a public domain (HTTP Basic Auth).
-      # In Dokploy add these under the service's Environment settings instead.
+      # In Dokploy add these under the service's Environment settings.
       - APP_USER=${APP_USER:-escape}
       - APP_PASSWORD=${APP_PASSWORD:-}
     volumes:
       - escaperoom-data:/data
-    # Dokploy's built-in proxy (Traefik) routes your domain to this port; no host
-    # publish needed there. "expose" keeps it internal.
-    expose:
-      - "3000"
-    # For a plain server WITHOUT Dokploy/Traefik, comment out "expose" above and
-    # publish the port instead:
-    # ports:
-    #   - "3000:3000"
+    networks:
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      # --- HTTPS (443) ---
+      - traefik.http.routers.escaperoom.rule=Host(`tracker.escapr.net`)
+      - traefik.http.routers.escaperoom.entrypoints=websecure
+      - traefik.http.routers.escaperoom.tls.certresolver=letsencrypt
+      - traefik.http.routers.escaperoom.service=escaperoom
+      # --- HTTP (80) -> same service (Dokploy usually redirects to HTTPS) ---
+      - traefik.http.routers.escaperoom-web.rule=Host(`tracker.escapr.net`)
+      - traefik.http.routers.escaperoom-web.entrypoints=web
+      - traefik.http.routers.escaperoom-web.service=escaperoom
+      # --- which container port Traefik forwards to ---
+      - traefik.http.services.escaperoom.loadbalancer.server.port=3000
 
 volumes:
   escaperoom-data:
+
+networks:
+  dokploy-network:
+    external: true
