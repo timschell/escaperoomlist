@@ -1,7 +1,8 @@
 # Deployment via Dokploy (Compose).
-# Routing/HTTPS is handled by Dokploy's "Domains" UI (Service: app, Port: 3000),
-# which injects the correct Traefik labels for this installation. We only need to
-# join the shared dokploy-network so Traefik can reach the container.
+# IMPORTANT: do NOT also add a Domain in Dokploy's UI for this service — routing
+# is done entirely by the Traefik labels below (a UI domain on the same host
+# creates a duplicate router and breaks routing / the deploy).
+# The container joins the shared dokploy-network so Traefik can reach it.
 # The named volume keeps the SQLite DB and uploaded photos across redeploys.
 services:
   app:
@@ -17,8 +18,21 @@ services:
       - escaperoom-data:/data
     networks:
       - dokploy-network
-    expose:
-      - "3000"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      # HTTPS (443)
+      - traefik.http.routers.escaperoom.rule=Host(`tracker.escapr.net`)
+      - traefik.http.routers.escaperoom.entrypoints=websecure
+      - traefik.http.routers.escaperoom.tls=true
+      - traefik.http.routers.escaperoom.tls.certresolver=letsencrypt
+      - traefik.http.routers.escaperoom.service=escaperoom
+      # HTTP (80)
+      - traefik.http.routers.escaperoom-web.rule=Host(`tracker.escapr.net`)
+      - traefik.http.routers.escaperoom-web.entrypoints=web
+      - traefik.http.routers.escaperoom-web.service=escaperoom
+      # target container port
+      - traefik.http.services.escaperoom.loadbalancer.server.port=3000
 
 volumes:
   escaperoom-data:
